@@ -78,3 +78,37 @@
     [...cards,...magnetic].forEach(node=>['--rx','--ry','--mx','--my'].forEach(key=>node.style.removeProperty(key)));
   });
 })();
+
+(() => {
+  const hero = document.querySelector('.hero');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const fine = matchMedia('(hover: hover) and (pointer: fine)');
+  if (!hero) return;
+  let frame = 0;
+  let clientX = 0;
+  let clientY = 0;
+  const reset = () => {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    hero.classList.remove('glow-active');
+  };
+  hero.addEventListener('pointermove', event => {
+    if (reduced.matches || !fine.matches || event.pointerType === 'touch') return;
+    clientX = event.clientX;
+    clientY = event.clientY;
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      const rect = hero.getBoundingClientRect();
+      hero.style.setProperty('--glow-x', `${clientX - rect.left}px`);
+      hero.style.setProperty('--glow-y', `${clientY - rect.top}px`);
+      hero.classList.add('glow-active');
+    });
+  }, {passive:true});
+  hero.addEventListener('pointerleave', reset);
+  hero.addEventListener('pointercancel', reset);
+  addEventListener('blur', reset);
+  addEventListener('scroll', reset, {passive:true});
+  reduced.addEventListener('change', reset);
+  fine.addEventListener('change', reset);
+})();

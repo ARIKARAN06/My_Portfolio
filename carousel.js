@@ -79,5 +79,17 @@
     width = track.clientWidth;
     go(active && !active.hidden ? active : visible()[0], true);
   }).observe(track);
-  go(visible()[0], true);
+  go(visible()[1] || visible()[0], true);
+})();
+
+(() => {
+ const ticker = document.querySelector('.ticker');
+ const button = ticker?.querySelector('.ticker-pause');
+ if (!button) return;
+ button.addEventListener('click', () => {
+  const paused = ticker.classList.toggle('is-paused');
+  button.textContent = paused ? '▶' : 'Ⅱ';
+  button.setAttribute('aria-label', paused ? 'Resume running skills strip' : 'Pause running skills strip');
+  button.setAttribute('aria-pressed', String(paused));
+ });
 })();
