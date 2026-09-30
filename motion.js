@@ -66,6 +66,7 @@
     top.hidden=scrollY<500;
     let active='home';
     const offset=document.querySelector('header').getBoundingClientRect().bottom+35;
+    document.documentElement.style.setProperty('--nav-offset', `${offset}px`);
     sections.forEach(section=>{if(section.getBoundingClientRect().top<=offset) active=section.id;});
     navLinks.forEach(link=>{if(link.hash===`#${active}`) link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});
     scheduled=false;

@@ -7,6 +7,16 @@
   const next = document.querySelector('#project-next');
   const status = document.querySelector('#project-position');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const selectors = document.querySelector('#project-selectors');
+  const selectorsByCard = new Map(cards.map((card, index) => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.textContent = String(index + 1).padStart(2, '0');
+    button.setAttribute('aria-label', `Show ${card.querySelector('h3').textContent}`);
+    button.setAttribute('aria-controls', card.id);
+    button.addEventListener('click', () => go(card));
+    selectors.append(button);
+    return [card, button];
+  }));
   let active = null;
   let pending = false;
   let target = null;
@@ -14,8 +24,20 @@
   // offsetLeft measures layout geometry, unaffected by the receding scale.
   const position = card => card.offsetLeft + card.offsetWidth / 2 - track.clientWidth / 2;
   function select(card) {
-    if (!card) return;
     const list = visible();
+    controls.hidden = !list.length;
+    selectors.hidden = !list.length;
+    selectorsByCard.forEach((button, item) => {
+      button.hidden = item.hidden;
+      button.setAttribute('aria-pressed', String(item === card));
+    });
+    if (!card) {
+      cards.forEach(item => item.classList.remove('is-active'));
+      active = null; target = null;
+      previous.disabled = true; next.disabled = true;
+      status.textContent = ''; status.dataset.total = '0';
+      return;
+    }
     const index = list.indexOf(card);
     cards.forEach(item => item.classList.toggle('is-active', item === card));
     previous.disabled = index <= 0;
@@ -32,8 +54,9 @@
     select(nearest);
   }
   function go(card, instant = false) {
-    if (!card) return;
+    if (!card) {select(null); return;}
     target = card;
+    select(card);
     track.scrollTo({left: position(card), behavior: instant || reduced.matches ? 'instant' : 'smooth'});
     if (instant || reduced.matches) sync();
   }
@@ -72,6 +95,12 @@
   document.addEventListener('projectsfiltered', () => {
     target = null;
     go(visible()[0], true);
+  });
+  document.addEventListener('projectfocus', event => {
+    const card = cards.find(item => item.id === event.detail.id && !item.hidden);
+    if (!card) return;
+    go(card, true);
+    card.querySelector('summary')?.focus({preventScroll:true});
   });
   let width = track.clientWidth;
   if ('ResizeObserver' in window) new ResizeObserver(() => {
